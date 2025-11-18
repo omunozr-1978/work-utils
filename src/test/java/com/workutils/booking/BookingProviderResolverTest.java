@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,17 +49,18 @@ class BookingProviderResolverTest {
 
         // Act
         resolver = new BookingProviderResolver(providers);
-        Map<String, BookingProviderService> providerMap = resolver.getProviderMap();
 
-        // Assert
-        assertNotNull(providerMap, "Provider map should not be null");
-        assertEquals(3, providerMap.size(), "Provider map should contain 3 entries");
-        assertTrue(providerMap.containsKey("PROVIDER_A"), "Map should contain PROVIDER_A");
-        assertTrue(providerMap.containsKey("PROVIDER_B"), "Map should contain PROVIDER_B");
-        assertTrue(providerMap.containsKey("PROVIDER_C"), "Map should contain PROVIDER_C");
-        assertEquals(provider1, providerMap.get("PROVIDER_A"), "PROVIDER_A should map to provider1");
-        assertEquals(provider2, providerMap.get("PROVIDER_B"), "PROVIDER_B should map to provider2");
-        assertEquals(provider3, providerMap.get("PROVIDER_C"), "PROVIDER_C should map to provider3");
+        // Assert - Verify all providers are accessible by their codes
+        Optional<BookingProviderService> resultA = resolver.resolveByCode("PROVIDER_A");
+        Optional<BookingProviderService> resultB = resolver.resolveByCode("PROVIDER_B");
+        Optional<BookingProviderService> resultC = resolver.resolveByCode("PROVIDER_C");
+
+        assertTrue(resultA.isPresent(), "PROVIDER_A should be present");
+        assertTrue(resultB.isPresent(), "PROVIDER_B should be present");
+        assertTrue(resultC.isPresent(), "PROVIDER_C should be present");
+        assertEquals(provider1, resultA.get(), "PROVIDER_A should map to provider1");
+        assertEquals(provider2, resultB.get(), "PROVIDER_B should map to provider2");
+        assertEquals(provider3, resultC.get(), "PROVIDER_C should map to provider3");
     }
 
     @Test
@@ -71,11 +71,10 @@ class BookingProviderResolverTest {
 
         // Act
         resolver = new BookingProviderResolver(providers);
-        Map<String, BookingProviderService> providerMap = resolver.getProviderMap();
 
-        // Assert
-        assertNotNull(providerMap, "Provider map should not be null");
-        assertTrue(providerMap.isEmpty(), "Provider map should be empty");
+        // Assert - Any code should return empty
+        Optional<BookingProviderService> result = resolver.resolveByCode("ANY_CODE");
+        assertFalse(result.isPresent(), "Should not resolve any provider when initialized with empty list");
     }
 
     @Test
@@ -83,11 +82,10 @@ class BookingProviderResolverTest {
     void testConstructorWithNullList() {
         // Act
         resolver = new BookingProviderResolver(null);
-        Map<String, BookingProviderService> providerMap = resolver.getProviderMap();
 
-        // Assert
-        assertNotNull(providerMap, "Provider map should not be null");
-        assertTrue(providerMap.isEmpty(), "Provider map should be empty");
+        // Assert - Any code should return empty
+        Optional<BookingProviderService> result = resolver.resolveByCode("ANY_CODE");
+        assertFalse(result.isPresent(), "Should not resolve any provider when initialized with null list");
     }
 
     @Test
@@ -98,12 +96,15 @@ class BookingProviderResolverTest {
 
         // Act
         resolver = new BookingProviderResolver(providers);
-        Map<String, BookingProviderService> providerMap = resolver.getProviderMap();
 
-        // Assert
-        assertEquals(2, providerMap.size(), "Provider map should contain 2 entries (null provider skipped)");
-        assertTrue(providerMap.containsKey("PROVIDER_A"), "Map should contain PROVIDER_A");
-        assertTrue(providerMap.containsKey("PROVIDER_B"), "Map should contain PROVIDER_B");
+        // Assert - Only non-null providers should be accessible
+        Optional<BookingProviderService> resultA = resolver.resolveByCode("PROVIDER_A");
+        Optional<BookingProviderService> resultB = resolver.resolveByCode("PROVIDER_B");
+
+        assertTrue(resultA.isPresent(), "PROVIDER_A should be present");
+        assertTrue(resultB.isPresent(), "PROVIDER_B should be present");
+        assertEquals(provider1, resultA.get(), "PROVIDER_A should map to provider1");
+        assertEquals(provider2, resultB.get(), "PROVIDER_B should map to provider2");
     }
 
     @Test
@@ -115,13 +116,15 @@ class BookingProviderResolverTest {
 
         // Act
         resolver = new BookingProviderResolver(providers);
-        Map<String, BookingProviderService> providerMap = resolver.getProviderMap();
 
-        // Assert
-        assertEquals(2, providerMap.size(), "Provider map should contain 2 entries (provider with null code skipped)");
-        assertTrue(providerMap.containsKey("PROVIDER_A"), "Map should contain PROVIDER_A");
-        assertTrue(providerMap.containsKey("PROVIDER_B"), "Map should contain PROVIDER_B");
-        assertFalse(providerMap.containsKey(null), "Map should not contain null key");
+        // Assert - Only providers with non-null codes should be accessible
+        Optional<BookingProviderService> resultA = resolver.resolveByCode("PROVIDER_A");
+        Optional<BookingProviderService> resultB = resolver.resolveByCode("PROVIDER_B");
+        Optional<BookingProviderService> resultNull = resolver.resolveByCode(null);
+
+        assertTrue(resultA.isPresent(), "PROVIDER_A should be present");
+        assertTrue(resultB.isPresent(), "PROVIDER_B should be present");
+        assertFalse(resultNull.isPresent(), "Null code should not resolve to any provider");
     }
 
     @Test

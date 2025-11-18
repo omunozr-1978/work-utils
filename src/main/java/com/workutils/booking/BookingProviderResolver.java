@@ -38,14 +38,4 @@ public class BookingProviderResolver {
     public Optional<BookingProviderService> resolveByCode(String code) {
         return Optional.ofNullable(providerMap.get(code));
     }
-
-    /**
-     * Returns the provider map for testing purposes.
-     * Package-private for test access.
-     *
-     * @return the provider map
-     */
-    Map<String, BookingProviderService> getProviderMap() {
-        return new HashMap<>(providerMap);
-    }
 }
